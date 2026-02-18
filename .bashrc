@@ -162,3 +162,11 @@ PS1+="\[\e[38;2;139;233;253m\] \w"  # cyan current directory
 PS1+="\$(parse_git_branch)"         # git info (green ✓ or red *)
 PS1+="\[\e[38;2;255;121;198m\]\$ "  # pink dollar sign
 PS1+="\[\e[0m\]"     
+
+# -----------------------------
+# Warn if SELinux is permissive
+# -----------------------------
+command -v getenforce >/dev/null && \
+[[ "$(getenforce)" != "Enforcing" ]] && \
+echo "⚠️  SELinux is not enforcing"
+
