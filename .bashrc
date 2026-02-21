@@ -1,167 +1,107 @@
-# My ~/.bashrc
-# ------------
+# ~/.bashrc: executed by bash(1) for non-login shells.
 
-# -----------------------------------------
-# Source global definitions (if they exist)
-# -----------------------------------------
-if [ -f /etc/bashrc ]; then
-  . /etc/bashrc
-fi
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
 
-# ------------------
-# User-specific PATH
-# ------------------
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
-  PATH="$HOME/.local/bin:$HOME/bin:$PATH"
-fi
-export PATH
-
-# ---------------------------------------------
-# History — large size, ignore/erase duplicates
-# ---------------------------------------------
-export HISTSIZE=10000
-export HISTFILESIZE=20000
-export HISTCONTROL=ignoredups:erasedups
+# History settings
+HISTCONTROL=ignoredups:erasedups
 shopt -s histappend
+HISTSIZE=10000
+HISTFILESIZE=20000
 shopt -s cmdhist
 
-# --------------------------
-# Preferred editor and pager
-# --------------------------
+# Editors & pagers
 export EDITOR=nvim
 export VISUAL=nvim
 export PAGER=less
-
-# -----------------------
-# Less with color support
-# -----------------------
 export LESS='-R --use-color -Dd+r$Du+b'
 
-# ----------------------
-# Enable bash completion
-# ----------------------
-if [ -f /etc/profile.d/bash_completion.sh ]; then
-  . /etc/profile.d/bash_completion.sh
-elif [ -f /usr/share/bash-completion/bash_completion ]; then
-  . /usr/share/bash-completion/bash_completion
+# Force-disable Kitty shell integration (prevents injection of raw escapes)
+unset KITTY_INSTALLATION_DIR
+unset KITTY_SHELL_INTEGRATION
+
+# Debian chroot (keep if needed)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# -------------------------
-# Dracula truecolor palette
-# -------------------------
-purple="#bd93f9"  # user@host
-cyan="#8be9fd"    # path
-pink="#ff79c6"    # $ prompt
-green="#50fa7b"   # git clean ✓
-red="#ff5555"     # git dirty *
-yellow="#f1fa8c"  # optional warnings
-fg="#f8f8f2"      # default text
-comment="#6272a4" # muted
+# Kitty title for xterm-like terms (keep but simplified)
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
 
-# --------------------------
-# Dracula-inspired LS_COLORS
-# --------------------------
-export LS_COLORS="di=38;2;189;147;249:ln=38;2;139;233;253:ex=38;2;80;250;123:\
-fi=38;2;248;248;242:pi=38;2;255;121;198:so=38;2;255;121;198:bd=38;2;241;250;140:\
-cd=38;2;241;250;140:or=38;2;255;85;85:mi=38;2;255;85;85:su=38;2;255;85;85:\
-sg=38;2;255;85;85:tw=38;2;80;250;123:ow=38;2;80;250;123"
-
-# ---------------------------------
-# Color support for common commands
-# ---------------------------------
-alias ls='ls --color=auto'
-alias grep='grep --color=auto'
-alias ip='ip --color=auto'
-
-if command -v dircolors >/dev/null; then
-  eval "$(dircolors -b)"
+# ls/grep color support + aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias vdir='vdir --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
 fi
-# -------------------
-# Navigation & safety
-# -------------------
+
+# Your aliases (unchanged)
 alias ..='cd ..'
 alias ...='cd ../..'
-alias ....='cd ../../..'
-alias ll='ls -lah'
+alias ll='ls -lah --color=auto'
 alias la='ls -A'
 alias rm='rm -Iv'
 alias cp='cp -iv'
 alias mv='mv -iv'
-
-# --------------
-# System helpers
-# --------------
 alias df='df -h'
 alias free='free -h'
 alias ports='ss -tulpn'
-
-# -------------
-# Git shortcuts
-# -------------
+alias dnfup='sudo dnf upgrade --refresh'
+alias pacup='sudo pacman -Syu'
 alias g='git'
 alias gs='git status'
 alias ga='git add'
 alias gc='git commit'
 alias gp='git push'
-alias gl='git log --oneline --graph --decorate --all'
-
-# ------------
-# Quick reload
-# ------------
+alias gl='git log --oneline --graph --decorate'
 alias reload='source ~/.bashrc'
+alias mkdir='mkdir -p'
 
-# ---------------------
-# Fedora / Arch helpers
-# ---------------------
-alias dnfup='sudo dnf upgrade --refresh'
-alias pacup='sudo pacman -Syu'
-
-# ------------------------
-# Simple archive extractor
-# ------------------------
-extract() {
-  if [ -f "$1" ]; then
-    case "$1" in
-    *.tar.bz2 | *.tbz2) tar xjf "$1" ;;
-    *.tar.gz | *.tgz) tar xzf "$1" ;;
-    *.tar.xz) tar xJf "$1" ;;
-    *.bz2) bunzip2 "$1" ;;
-    *.rar) unrar x "$1" ;;
-    *.gz) gunzip "$1" ;;
-    *.zip) unzip "$1" ;;
-    *.Z) uncompress "$1" ;;
-    *.7z) 7z x "$1" ;;
-    *) echo "Don't know how to extract '$1'..." ;;
-    esac
-  else
-    echo "'$1' is not a valid file!"
+# Bash completion
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
   fi
-}
+fi
 
-# ───────────────────────────────────────────────
-# Git branch + dirty/clean indicator
-# ───────────────────────────────────────────────
-parse_git_branch() {
-  local branch
-  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || return
-  if [ -n "$branch" ]; then
-    if git diff --quiet --ignore-submodules HEAD 2>/dev/null &&
-      git diff --cached --quiet 2>/dev/null; then
-      echo -e "\[\e[38;2;80;250;123m\][$branch ✓]\[\e[0m\]"
-    else
-      echo -e "\[\e[38;2;255;85;85m\][$branch *]\[\e[0m\]"
-    fi
-  fi
-}
+# ────────────────────────────────────────────────────────────────
+# MISS DRACULA PROMPT – MUST BE AT THE VERY END
+# ────────────────────────────────────────────────────────────────
 
-# ───────────────────────────────────────────────
-# Prompt (Dracula style)
-# ───────────────────────────────────────────────
-PS1="\[\e[38;2;189;147;249m\]\u@\h" # purple user@host
-PS1+="\[\e[38;2;139;233;253m\] \w"  # cyan current directory
-PS1+="\$(parse_git_branch)"         # git info (green ✓ or red *)
-PS1+="\[\e[38;2;255;121;198m\]\$ "  # pink dollar sign
-PS1+="\[\e[0m\]"     
+# Color escapes
+export C_RESET="\[\e[0m\]"
+export C_PURPLE="\[\e[38;2;189;147;249m\]"   # user@host
+export C_PINK="\[\e[38;2;255;121;198m\]"      # path & $
+export C_GREEN="\[\e[38;2;80;250;123m\]"
+export C_COMMENT="\[\e[38;2;98;114;164m\]"    # git branch
+
+# Set the prompt (one-line version)
+PS1="${C_PURPLE}\u@\h${C_RESET}:${C_PINK}\w${C_RESET}"
+PS1+="${C_COMMENT}\$(__git_ps1 ' (%s)' 2>/dev/null)${C_RESET}"
+PS1+=" ${C_PINK}\$${C_RESET} "
+
+# Alternative two-line (uncomment if preferred):
+# PS1="\n${C_PURPLE}\u@\h ${C_PINK}\w${C_RESET}\n${C_PINK}→ ${C_RESET}"
+export PATH="$HOME/.local/bin:$PATH"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion    
 
 # -----------------------------
 # Warn if SELinux is permissive
