@@ -48,7 +48,7 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
-# Your aliases (unchanged)
+# Aliases 
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ll='ls -lah --color=auto'
@@ -80,7 +80,7 @@ if ! shopt -oq posix; then
 fi
 
 # ────────────────────────────────────────────────────────────────
-# MISS DRACULA PROMPT – MUST BE AT THE VERY END
+# MISS DRACULA
 # ────────────────────────────────────────────────────────────────
 
 # Color escapes
