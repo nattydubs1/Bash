@@ -17,8 +17,8 @@ shopt -s cmdhist
 export HISTIGNORE="ls:cd:exit:pwd:veracrypt*:distrobox enter*:sudo rpm-ostree*:mount*:umount*"
 
 # Editors & pagers
-export EDITOR=nvim
-export VISUAL=nvim
+export EDITOR=vim
+export VISUAL=vim
 export PAGER=less
 export LESS='-R --use-color -Dd+r$Du+b'
 
@@ -76,11 +76,11 @@ alias mkdir='mkdir -p'
 # Host Updates (Atomic)
 alias up='sudo rpm-ostree upgrade'
 
-# Quick Entry to your Containers
+# Quick Entry to your Boxes
 alias work='distrobox enter nvim-dev'
 alias study='distrobox enter linux-plus-lab'
 
-# The "Kill Switch" (Terminal version)
+# The "Nomad Kill Switch" (Terminal version)
 alias ghost='veracrypt -d && notify-send -u critical "VAULT LOCKED" "Personal data is now invisible."'
 
 # Bash completion
@@ -103,7 +103,7 @@ export C_PINK="\[\e[38;2;255;121;198m\]"      # path & $
 export C_GREEN="\[\e[38;2;80;250;123m\]"
 export C_COMMENT="\[\e[38;2;98;114;164m\]"    # git branch
 
-# Set the prompt 
+# Set the prompt (Medusa Nomad Version)
 if [ -f /run/.containerenv ]; then
     # If in a box, add the green [name] tag
     PS1="${C_GREEN}[${DISTROBOX_NAME:-box}] ${C_RESET}"
@@ -128,3 +128,12 @@ export PATH="$HOME/.local/bin:$PATH"
 command -v getenforce >/dev/null && \
 [[ "$(getenforce)" != "Enforcing" ]] && \
 echo "⚠️  SELinux is not enforcing"
+
+# Check my current Digital Mask (Replace wlpXXX with your device name)
+alias mask='ip link show YOUR_DEVICE_NAME | grep link/ether'
+
+# The Medusa Vault "Key"
+alias vault-open='sudo cryptsetup open ~/.secret-vault.img my_ghost_drive && sudo mount /dev/mapper/my_ghost_drive ~/Vault && sudo chown $USER:$USER ~/Vault && notify-send "Vault Opened"'
+
+# The Medusa Vault "Lock"
+alias vault-close='sudo umount ~/Vault && sudo cryptsetup close my_ghost_drive && notify-send "Vault Locked"'
