@@ -1,4 +1,4 @@
-# ~/.bashrc: executed by bash(1) for non-login shells.
+# ~/.bashrc:
 
 # If not running interactively, don't do anything
 case $- in
@@ -6,15 +6,21 @@ case $- in
       *) return;;
 esac
 
-# History settings
-HISTCONTROL=ignoredups:erasedups
-shopt -s histappend
-HISTSIZE=10000
-HISTFILESIZE=20000
-shopt -s cmdhist
+# ────────────────────────────────────────────────────────────────
+# RAM-ONLY HISTORY
+# ────────────────────────────────────────────────────────────────
+umask 077                       # Set default privacy filter
+export HISTFILE=/dev/null       # Direct history to the void (SSD safety)
+export HISTSIZE=500             # Small working memory in RAM only
+export HISTFILESIZE=0           # Ensure no file is ever written
+export HISTCONTROL=ignoreboth:erasedups 
+shopt -u histappend             # Stop appending to files
 
-# Don't log sensitive or common short commands
-export HISTIGNORE="ls:cd:exit:pwd:veracrypt*:distrobox enter*:sudo rpm-ostree*:mount*:umount*"
+# Ignore common and sensitive commands
+export HISTIGNORE="ls:cd:exit:pwd:veracrypt*:vault-*:ghost:up:sudo*:history*"
+
+# Wipe RAM buffer on exit
+trap 'history -c' EXIT
 
 # Editors & pagers
 export EDITOR=vim
@@ -76,12 +82,12 @@ alias mkdir='mkdir -p'
 # Host Updates (Atomic)
 alias up='sudo rpm-ostree upgrade'
 
-# Quick Entry to your Boxes
+# Boxes
 alias work='distrobox enter nvim-dev'
 alias study='distrobox enter linux-plus-lab'
 
-# The "Nomad Kill Switch" (Terminal version)
-alias ghost='veracrypt -d && notify-send -u critical "VAULT LOCKED" "Personal data is now invisible."'
+# Bye,bye
+alias nuke='history -c && rm -f ~/.bash_history && touch ~/.bash_history && history -w && exit'
 
 # Bash completion
 if ! shopt -oq posix; then
@@ -103,7 +109,7 @@ export C_PINK="\[\e[38;2;255;121;198m\]"      # path & $
 export C_GREEN="\[\e[38;2;80;250;123m\]"
 export C_COMMENT="\[\e[38;2;98;114;164m\]"    # git branch
 
-# Set the prompt (Medusa Nomad Version)
+# Set the prompt
 if [ -f /run/.containerenv ]; then
     # If in a box, add the green [name] tag
     PS1="${C_GREEN}[${DISTROBOX_NAME:-box}] ${C_RESET}"
@@ -132,8 +138,8 @@ echo "⚠️  SELinux is not enforcing"
 # Check my current Digital Mask (Replace wlpXXX with your device name)
 alias mask='ip link show YOUR_DEVICE_NAME | grep link/ether'
 
-# The Medusa Vault "Key"
+# The Vault "Key"
 alias vault-open='sudo cryptsetup open ~/.secret-vault.img my_ghost_drive && sudo mount /dev/mapper/my_ghost_drive ~/Vault && sudo chown $USER:$USER ~/Vault && notify-send "Vault Opened"'
 
-# The Medusa Vault "Lock"
+# The Vault "Lock"
 alias vault-close='sudo umount ~/Vault && sudo cryptsetup close my_ghost_drive && notify-send "Vault Locked"'
