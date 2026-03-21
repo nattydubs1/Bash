@@ -32,12 +32,12 @@ export LESS='-R --use-color -Dd+r$Du+b'
 unset KITTY_INSTALLATION_DIR
 unset KITTY_SHELL_INTEGRATION
 
-# Debian chroot (keep if needed)
+# Debian chroot 
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# Kitty title for xterm-like terms (keep but simplified)
+# Kitty title for xterm-like terms 
 case "$TERM" in
 xterm*|rxvt*)
     PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
